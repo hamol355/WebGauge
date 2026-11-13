@@ -27,7 +27,7 @@ export interface Report {
   meta: {
     /** Pages whose checks are included in the report (the start page plus extra pages not skipped). */
     pagesAnalyzed: number;
-    sitecheckVersion: string;
+    webgaugeVersion: string;
     /** ISO 8601 timestamp. */
     analyzedAt: string;
     responseTimeMs: number;

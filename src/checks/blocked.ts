@@ -11,12 +11,12 @@ export const BLOCK_MESSAGES: Record<BlockReason, string> = {
   'robots-disallow': 'robots.txt does not allow automated access to this page',
 };
 
-/** Shown after every block message. SiteCheck never tries to get past the protection. */
+/** Shown after every block message. WebGauge never tries to get past the protection. */
 export const BLOCK_HINT =
-  'SiteCheck identifies itself honestly and does not try to bypass bot protection. Ask the site owner to allow the SiteCheck user agent, or run it against an environment without bot protection.';
+  'WebGauge identifies itself honestly and does not try to bypass bot protection. Ask the site owner to allow the WebGauge user agent, or run it against an environment without bot protection.';
 
 /** Product token matched against robots.txt `User-agent` lines (case-insensitive). */
-export const ROBOTS_AGENT = 'SiteCheck';
+export const ROBOTS_AGENT = 'WebGauge';
 
 export class BlockedError extends Error {
   override name = 'BlockedError';
@@ -77,7 +77,7 @@ function compilePattern(path: string): RegExp {
 }
 
 /**
- * Rules that apply to SiteCheck (RFC 9309): the group naming SiteCheck if there is one,
+ * Rules that apply to WebGauge (RFC 9309): the group naming WebGauge if there is one,
  * otherwise the `*` group. Groups for the same agent are merged.
  */
 function rulesFor(robotsTxt: string): RobotsRule[] {
@@ -116,7 +116,7 @@ function rulesFor(robotsTxt: string): RobotsRule[] {
   return hasNamed ? named : wildcard;
 }
 
-/** True if robots.txt forbids SiteCheck from fetching `url`. Longest match wins, Allow on ties. */
+/** True if robots.txt forbids WebGauge from fetching `url`. Longest match wins, Allow on ties. */
 export function isDisallowedByRobots(robots: TextResponse, url: string): boolean {
   // A missing, unreachable or broken robots.txt (4xx, 5xx, HTML error page) allows everything.
   if (robots.status !== 200) return false;

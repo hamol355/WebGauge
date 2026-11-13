@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-Vägledning för Claude Code i det här repot. Produktspecifikationen finns i [SiteCheck.md](SiteCheck.md) – läs den för funktionslista, roadmap och exempel på output.
+Vägledning för Claude Code i det här repot. Produktspecifikationen finns i [WebGauge.md](WebGauge.md) – läs den för funktionslista, roadmap och exempel på output.
 
 ## Projekt
 
-SiteCheck är ett CLI-verktyg (TypeScript/Node.js) som tar en URL, kör automatiserade kontroller inom Availability, Security, SEO och HTML (i M7 ersätts HTML av Accessibility), och presenterar en rapport med en score 0–100.
+WebGauge är ett CLI-verktyg (TypeScript/Node.js) som tar en URL, kör automatiserade kontroller inom Availability, Security, SEO och HTML (i M7 ersätts HTML av Accessibility), och presenterar en rapport med en score 0–100.
 
 **Status:** Milstolparna M1–M5 i [implementation.md](implementation.md) är klara (CLI, availability-, security-, SEO- och HTML-kontroller, scoring, text-/JSON-output, tester och CI). M6–M9 (blockerade sajter, WCAG-kontroller, flera sidor via sitemap, fler kontroller enligt avsnitt 5e) är också klara. Nästa steg är release (M10). Följ milstolparna i implementation.md.
 
@@ -40,7 +40,7 @@ Flöde: CLI → hämta sidan en gång → kör kontroller → scoring → output
 
 ## CLI-kontrakt
 
-- `sitecheck <url> [--format text|json] [--min-score <n>]`, plus `--help` och `--version`.
+- `webgauge <url> [--format text|json] [--min-score <n>]`, plus `--help` och `--version`.
 - Exit codes (definiera som konstanter): `0` ok, `1` score under `--min-score`, `2` ogiltig input/användarfel, `3` webbplatsen kunde inte nås, blockerar automatiska besökare eller internt fel.
 - Resultat skrivs till **stdout**, felmeddelanden och diagnostik till **stderr**, så att `--format json` alltid går att pipa.
 - Om URL saknar schema: anta `https://`.
@@ -50,7 +50,7 @@ Flöde: CLI → hämta sidan en gång → kör kontroller → scoring → output
 
 - Sätt alltid timeout på HTTP-anrop (förslag: 10 s) och begränsa antal redirects.
 - Begränsa hur mycket av svarskroppen som läses (HTML-parsning av enorma svar ska inte kunna hänga processen).
-- Skicka en tydlig `User-Agent` (`SiteCheck/<version>`).
+- Skicka en tydlig `User-Agent` (`WebGauge/<version>`).
 - Behandla all hämtad data som otillförlitlig. Om analysmotorn senare exponeras via ett REST API måste SSRF hanteras (blockera privata/loopback-adresser) – håll nätverksanropen bakom en enda modul så det går att lägga till.
 - Mät response time konsekvent (tid till första svar, inte inkl. HTML-parsning) och dokumentera definitionen.
 
@@ -77,7 +77,7 @@ Performance (page size, Core Web Vitals, cache), REST API, GitHub Action, kontra
 
 ### Blockerade sajter
 
-- Blockerar sajten automatiska besökare (401/403/429, challenge-sida eller `robots.txt`-Disallow för `SiteCheck`/`*`) ska SiteCheck avbryta med ett tydligt `Access not allowed: <orsak>` på stderr, ingen score och exit code 3. Kringgå aldrig skyddet (inga UA-knep, ingen challenge-lösning).
+- Blockerar sajten automatiska besökare (401/403/429, challenge-sida eller `robots.txt`-Disallow för `WebGauge`/`*`) ska WebGauge avbryta med ett tydligt `Access not allowed: <orsak>` på stderr, ingen score och exit code 3. Kringgå aldrig skyddet (inga UA-knep, ingen challenge-lösning).
 - Vid flera sidor: respektera `robots.txt`, hämta bara samma origin som startsidan, hoppa över blockerade sidor med orsak istället för att avbryta.
 
 ## Git

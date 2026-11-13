@@ -6,4 +6,4 @@ const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url),
 };
 
 export const VERSION: string = pkg.version;
-export const USER_AGENT = `SiteCheck/${VERSION}`;
+export const USER_AGENT = `WebGauge/${VERSION}`;

@@ -27,7 +27,7 @@ interface CliOptions {
 function reportError(io: Io, prefix: string, err: unknown): void {
   const message = err instanceof Error ? err.message : String(err);
   io.stderr(`${prefix}: ${escapeControlChars(message)}\n`);
-  if (io.env['DEBUG'] === 'sitecheck' && err instanceof Error && err.stack) {
+  if (io.env['DEBUG'] === 'webgauge' && err instanceof Error && err.stack) {
     io.stderr(`${err.stack}\n`);
   }
 }
@@ -106,7 +106,7 @@ export async function main(
 ): Promise<number> {
   let exitCode = EXIT_OK;
   const program = new Command()
-    .name('sitecheck')
+    .name('webgauge')
     .description('Check a website for availability, security, SEO and accessibility.')
     .version(VERSION)
     .argument('<url>', 'URL to check (https:// is assumed if no scheme is given)')

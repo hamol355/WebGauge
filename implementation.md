@@ -1,8 +1,8 @@
-# Implementationsplan – SiteCheck v1.0.0
+# Implementationsplan – WebGauge v1.0.0
 
 > Status 2026-10-29: M1–M9 klara (M9: fler kontroller, se 5e). Nästa steg är release (M10), ett mål, inte en deadline.
 
-Det här dokumentet bryter ner roadmapen i [SiteCheck.md](SiteCheck.md) till konkreta steg. Regler och konventioner finns i [CLAUDE.md](CLAUDE.md); vid konflikt gäller CLAUDE.md.
+Det här dokumentet bryter ner roadmapen i [WebGauge.md](WebGauge.md) till konkreta steg. Regler och konventioner finns i [CLAUDE.md](CLAUDE.md); vid konflikt gäller CLAUDE.md.
 
 ## 1. Avvikelser från roadmapen i specen
 
@@ -20,10 +20,10 @@ Det här dokumentet bryter ner roadmapen i [SiteCheck.md](SiteCheck.md) till kon
 - **Node 22 LTS+** (Node 20 är EOL sedan april 2026), ESM (`"type": "module"`), TypeScript `strict`.
 - **Beroenden:** runtime `commander`, `cheerio`; dev `typescript`, `vitest`, `eslint` (+ `typescript-eslint`), `prettier`, `tsx`. Ingen axios/node-fetch.
 - **Response time** = tid från att sista requesten skickas tills svarshuvudena tagits emot (kan inkludera DNS/TLS – vid redirect till samma host återanvänder `fetch`/undici anslutningen och då ingår de inte; exkl. redirects före den, body-läsning och parsning). Dokumenteras i kod och README.
-- **Nätverk** sker bara i `src/net/http.ts`: timeout 10 s (5 s för robots/sitemap), max 5 redirects (manuell loop, bara `http:`/`https:`), body-tak 2 MB (1 MB för robots/sitemap), `User-Agent: SiteCheck/<version>`.
+- **Nätverk** sker bara i `src/net/http.ts`: timeout 10 s (5 s för robots/sitemap), max 5 redirects (manuell loop, bara `http:`/`https:`), body-tak 2 MB (1 MB för robots/sitemap), `User-Agent: WebGauge/<version>`.
 - **Motorn** (`src/checks`, `src/scoring`, `src/net`, `src/index.ts`) importerar aldrig `src/cli` och skriver aldrig till stdout/stderr.
-- **Blockering:** SiteCheck försöker aldrig ta sig förbi bot-skydd (inga UA-knep, ingen challenge-lösning). Blockeras startsidan avbryts körningen med `BlockedError` och en tydlig orsak, se avsnitt 5b. Det är en medveten ändring av tidigare beteende (403 → `http-status` fail + skippade sidkontroller).
-- **Höflighet vid flera sidor:** `robots.txt` respekteras för alla extra sidor vi hämtar (Disallow för `SiteCheck` eller `*`), max 4 samtidiga requests, hårt tak 50 sidor.
+- **Blockering:** WebGauge försöker aldrig ta sig förbi bot-skydd (inga UA-knep, ingen challenge-lösning). Blockeras startsidan avbryts körningen med `BlockedError` och en tydlig orsak, se avsnitt 5b. Det är en medveten ändring av tidigare beteende (403 → `http-status` fail + skippade sidkontroller).
+- **Höflighet vid flera sidor:** `robots.txt` respekteras för alla extra sidor vi hämtar (Disallow för `WebGauge` eller `*`), max 4 samtidiga requests, hårt tak 50 sidor.
 
 ## 3. Målstruktur
 
@@ -89,7 +89,7 @@ export interface Report {
   grade: 'Excellent' | 'Good' | 'Needs improvement' | 'Poor';
   categories: Record<Category, { score: number; max: number }>;
   checks: CheckResult[];
-  meta: { sitecheckVersion: string; analyzedAt: string; responseTimeMs: number; truncated: boolean };
+  meta: { webgaugeVersion: string; analyzedAt: string; responseTimeMs: number; truncated: boolean };
 }
 ```
 
@@ -169,7 +169,7 @@ Sidan svarade inte 2xx: SEO-sidkontroller och HTML-kontroller returnerar `skip` 
 
 ## 5b. Blockerade sajter (M6)
 
-Om sajten inte tillåter automatiska besökare ska SiteCheck säga det rakt ut, inte ge en score på en blocksida.
+Om sajten inte tillåter automatiska besökare ska WebGauge säga det rakt ut, inte ge en score på en blocksida.
 
 `detectBlock(page, robots)` är en ren funktion (testbar utan nätverk) som körs på startsidans svar innan några kontroller körs:
 
@@ -179,12 +179,12 @@ Om sajten inte tillåter automatiska besökare ska SiteCheck säga det rakt ut, 
 | `forbidden`       | HTTP 403 utan challenge-signal                                                                                           | The site refused the request (HTTP 403), probably bot protection or a firewall rule       |
 | `rate-limited`    | HTTP 429                                                                                                                 | The site is rate limiting requests (HTTP 429)                                             |
 | `challenge`       | `cf-mitigated: challenge`, eller 403/429/503 där body/headers matchar kända challenge-sidor (Cloudflare "Just a moment", DataDome, Akamai, PerimeterX, captcha) | The site served a bot-protection challenge                                |
-| `robots-disallow` | `robots.txt` har Disallow som täcker startsidans path för `SiteCheck` eller `*`                                          | robots.txt does not allow automated access to this page                                   |
+| `robots-disallow` | `robots.txt` har Disallow som täcker startsidans path för `WebGauge` eller `*`                                          | robots.txt does not allow automated access to this page                                   |
 
 - Mönstren för challenge-sidor ligger som konstanter på ett ställe (`checks/blocked.ts`).
-- **robots.txt-tolkning** (RFC 9309): gruppen för `SiteCheck` används om den finns, annars `*`; längsta matchande regel vinner, `Allow` vinner vid lika längd; `*` och `$` i mönster stöds. Matchas mot slutlig URL:s path + query (det är den sidan som analyseras), båda sidor procentkodade (icke-ASCII kodas, hex i versaler); BOM och CR/LF/CRLF-radslut hanteras. robots.txt som svarar 4xx (inkl. 401/403/418) eller inte går att hämta = allt tillåtet (Googles konvention); 5xx = allt tillåtet men notis på stderr (vi låter inte en trasig robots.txt blockera analysen; motorn skriver inte själv utan anropar `AnalyzeOptions.onNotice`, som CLI:t skriver som `Notice: …`). robots.txt hämtas från startsidans slutliga origin, dvs. efter startsidan och parallellt med HTTP→HTTPS-proben; vid Disallow kastas svaret och ingen rapport skapas.
+- **robots.txt-tolkning** (RFC 9309): gruppen för `WebGauge` används om den finns, annars `*`; längsta matchande regel vinner, `Allow` vinner vid lika längd; `*` och `$` i mönster stöds. Matchas mot slutlig URL:s path + query (det är den sidan som analyseras), båda sidor procentkodade (icke-ASCII kodas, hex i versaler); BOM och CR/LF/CRLF-radslut hanteras. robots.txt som svarar 4xx (inkl. 401/403/418) eller inte går att hämta = allt tillåtet (Googles konvention); 5xx = allt tillåtet men notis på stderr (vi låter inte en trasig robots.txt blockera analysen; motorn skriver inte själv utan anropar `AnalyzeOptions.onNotice`, som CLI:t skriver som `Notice: …`). robots.txt hämtas från startsidans slutliga origin, dvs. efter startsidan och parallellt med HTTP→HTTPS-proben; vid Disallow kastas svaret och ingen rapport skapas.
 - Konsekvens att dokumentera i README: många sajter har `User-agent: *` / `Disallow: /` och släpper bara in namngivna sökmotorer – de ger "access not allowed".
-- Alla meddelanden slutar med en hint: SiteCheck identifierar sig ärligt (`SiteCheck/<version>`) och försöker inte kringgå skyddet; be sajtägaren släppa igenom user-agenten, eller kör mot en miljö utan bot-skydd.
+- Alla meddelanden slutar med en hint: WebGauge identifierar sig ärligt (`WebGauge/<version>`) och försöker inte kringgå skyddet; be sajtägaren släppa igenom user-agenten, eller kör mot en miljö utan bot-skydd.
 - `analyze()` kastar `BlockedError` (reason, status, url), definierad i `checks/blocked.ts` bredvid `BlockReason` och re-exporterad från `index.ts` som övriga feltyper. CLI skriver `Access not allowed: <meddelande>` till stderr, inget på stdout, exit code 3 (samma som onåbar sida – inget nytt exit code i kontraktet; kan delas ut till eget senare om CI-användare behöver skilja dem).
 - 404 och 5xx är inte blockering utan ger som tidigare `http-status` fail och skippade sidkontroller.
 - Gäller bara startsidan. Extra sidor via sitemap (M8) som blockeras eller är disallowed i robots.txt hoppas över (`skipped` på sidan, med orsak) och påverkar inte scoring.
@@ -219,7 +219,7 @@ Ny kategori `accessibility` som **ersätter `html`**, endast statisk HTML via Ch
 - **Sitemapen hämtas en gång:** `fetchRootSitemap()` (via `fetchBytes`, 5 s, 5 MB) matar både `sitemap-xml`-kontrollen (avkodad med `bytesToText`) och `readSitemap`.
 - **Hämtning av sitemap:** ny `fetchBytes(url, opts)` i `net/http.ts` som returnerar rå `Buffer` + `truncated` (samma timeout/redirect/body-tak som `fetchText`). `fetchText` duger inte: den avkodar till sträng med `TextDecoder`, vilket förstör gzip, och exponerar inte `truncated`. Avkodning (gunzip, sedan UTF-8) sker i `net/sitemap.ts`.
 - **Sitemap-läsare** (`net/sitemap.ts`, bygger på `fetchBytes`): läser `<loc>` ur `<urlset>`, följer `<sitemapindex>` max 2 nivåer och max 10 barn-sitemaps, gunzippar `.gz` med tak på uppackad storlek (skydd mot zip-bomb), max 5 000 URL:er totalt. Saknas eller är sitemapen ogiltig analyseras bara startsidan, med en notis på stderr.
-- **Filtrering:** endast samma origin som slutlig startsida, endast `http:`/`https:`, deduplicerat, filändelser som inte är HTML (pdf, bilder …) bort, och URL:er som `robots.txt` inte tillåter bort. Utan same-origin-filtret kunde en elak sitemap få SiteCheck att anropa godtyckliga hosts (SSRF).
+- **Filtrering:** endast samma origin som slutlig startsida, endast `http:`/`https:`, deduplicerat, filändelser som inte är HTML (pdf, bilder …) bort, och URL:er som `robots.txt` inte tillåter bort. Utan same-origin-filtret kunde en elak sitemap få WebGauge att anropa godtyckliga hosts (SSRF).
 - **Sitemap-filerna själva** får ligga på annan host (vanligt med CDN; `sitemap-xml` följer redan `Sitemap:`-direktivet dit), men bara `http:`/`https:` och bara URL:er från robots.txt eller ett `<sitemapindex>`. Same-origin-kravet gäller sidorna som analyseras. När SSRF-skyddet läggs till (REST API) gäller det även sitemap-anropen, eftersom allt går via `net/http.ts`.
 - **www / icke-www** räknas som olika origin (ingen gissning). Filtreras alla sitemap-URL:er bort skrivs en notis på stderr ("Sitemap has no URLs on <origin>; analysing the start page only") och bara startsidan analyseras.
 - **Urval:** startsidan alltid med; resten deterministiskt utspritt, grupperat på första path-segmentet så att olika mallar (blogg, produkt …) täcks. Sidor på toppnivå (`/about`, `/mitt-inlagg/`) delar en grupp, så att en platt sajt samplas utspritt i stället för alfabetiskt först. Samma indata ger samma urval.
@@ -280,7 +280,7 @@ Beslut 2026-10-29: release skjuts upp för fler kontroller. Alla följer designr
 | `redirect-chain`  | B   | 2   | högst 1 redirect till slutlig URL                             | 2–3                                                               | 4–5                          |
 | `www-consistency` | B   | 3   | den andra varianten (www ↔ icke-www) redirectar till slutlig host, eller finns inte i DNS | svarar 2xx utan redirect (duplicerat innehåll) | –          |
 
-- **`soft-404`**: `GET <origin>/sitecheck-404-<slumpad hex>` med `fetchPage` (5 s, body kastas), parallellt med övriga prober. Pathen respekterar robots.txt; är den disallowed → `skip`. Nätverksfel → `skip`.
+- **`soft-404`**: `GET <origin>/webgauge-404-<slumpad hex>` med `fetchPage` (5 s, body kastas), parallellt med övriga prober. Pathen respekterar robots.txt; är den disallowed → `skip`. Nätverksfel → `skip`.
 - **`redirect-chain`** använder `FetchedPage.redirects`, ingen extra request.
 - **`www-consistency`** byggs som `probeHttpRedirect` (följer inte målet, max 5 s). Körs bara när slutlig host börjar med `www.` eller har exakt två labels (`example.com`); övriga (t.ex. `blog.example.com`, `example.co.uk`) → `skip`, ingen gissning om publika suffix.
 
@@ -300,7 +300,7 @@ Beslut 2026-10-29: release skjuts upp för fler kontroller. Alla följer designr
 
 ### Medvetet utanför
 
-- **Exponerade filer** (`/.git/HEAD`, `/.env` …): gör SiteCheck till en sårbarhetsskanner i stället för "vad en besökare ser". Produktbeslut, inte en kontroll.
+- **Exponerade filer** (`/.git/HEAD`, `/.env` …): gör WebGauge till en sårbarhetsskanner i stället för "vad en besökare ser". Produktbeslut, inte en kontroll.
 - **DNS** (SPF, DMARC, CAA, DNSSEC): handlar om e-post och domänen snarare än sajten; ev. egen kategori senare.
 - **Komprimering, HTTP/2, cache-headers**: performance, fortfarande utanför scope (avsnitt 11).
 
@@ -318,14 +318,14 @@ export const GRADES = [
 ] as const;
 ```
 
-- Kategori-score = `sum(points) / sum(maxPoints) * WEIGHTS[cat]` över kontroller som räknas, avrundat till heltal; kategori utan sådana kontroller ger 0. `error` och `skip` räknas inte (ett fel i SiteCheck eller en kontroll som inte gällde säger inget om sajten). Övriga kategorier skalas inte upp, så en sida som inte gick att kontrollera kan inte få högt betyg.
+- Kategori-score = `sum(points) / sum(maxPoints) * WEIGHTS[cat]` över kontroller som räknas, avrundat till heltal; kategori utan sådana kontroller ger 0. `error` och `skip` räknas inte (ett fel i WebGauge eller en kontroll som inte gällde säger inget om sajten). Övriga kategorier skalas inte upp, så en sida som inte gick att kontrollera kan inte få högt betyg.
 - Total = summa av okrundade kategoripoäng, avrundad en gång (undviker avrundningsdrift). Därför summerar de avrundade kategoripoängen inte alltid till `score` – dokumenteras i README.
 - Allt (vikter, gränser, tröskelvärden för kontroller) är exporterade konstanter – inga magiska tal i kontrollerna.
 
 ## 7. CLI-kontrakt
 
 ```text
-sitecheck <url> [--format text|json] [--min-score <0-100>] [--pages <1-50>] [--help] [--version]
+webgauge <url> [--format text|json] [--min-score <0-100>] [--pages <1-50>] [--help] [--version]
 ```
 
 `--pages` tillkommer i M8. `--pages` utanför 1–50 → exit 2. Blockerad startsida → exit 3 (se 5b).
@@ -345,7 +345,7 @@ Varje milstolpe = en feature-branch, flera små commits, klart när "Klart när"
 Branch: `feature/scaffold`, sedan `feature/availability`.
 
 - [x] Kontrollera paketnamn på npm (fallback: scoped paket) och sätt `name` därefter
-- [x] `package.json` med scripts `build`, `dev`, `test`, `lint`, `format`, `bin: { sitecheck }`, `engines: node >=22`
+- [x] `package.json` med scripts `build`, `dev`, `test`, `lint`, `format`, `bin: { webgauge }`, `engines: node >=22`
 - [x] `tsconfig.json` (strict, `NodeNext`, outDir `dist`), `.gitignore`, `.prettierrc`, ESLint flat config, `vitest.config.ts`, `LICENSE` (MIT)
 - [x] `checks/types.ts`, `checks/run.ts` (`makeResult`, `safeRun`)
 - [x] `index.ts`: minimal `analyze(url)` (hämta → availability-kontroller); utökas i varje milstolpe så att orkestreringen aldrig hamnar i `src/cli/`
@@ -355,7 +355,7 @@ Branch: `feature/scaffold`, sedan `feature/availability`.
 - [x] `tests/helpers/test-server.ts` (Node `http`, konfigurerbara rutter: status, headers, fördröjning, redirect-kedjor, stor body)
 - [x] Tester: `url.test.ts` (inkl. `localhost:1` → `https://localhost:1`, där `new URL()` annars tolkar `localhost:` som schema), `availability.test.ts`, `http.test.ts` (timeout, redirect-tak, body-tak, redirect över schema, onåbar port)
 
-Klart när: `npm run dev -- https://example.com` skriver Availability-sektionen; `npm test` grönt; `sitecheck localhost:1` → exit 3.
+Klart när: `npm run dev -- https://example.com` skriver Availability-sektionen; `npm test` grönt; `webgauge localhost:1` → exit 3.
 
 ### M2 – 2: Security
 
@@ -391,7 +391,7 @@ Branch: `feature/scoring-output`.
 - [x] `output/terminal.ts`: grupperat per kategori, ✓/⚠/✗, remediation under varje icke-pass, summering + betyg, respekterar `NO_COLOR` och icke-TTY
 - [x] `output/json.ts` enligt `Report`; golden-test mot fixture (fast `analyzedAt` via injicerad klocka, `responseTimeMs` normaliseras i testet)
 - [x] CLI: `--format`, `--min-score`, exit codes, felmeddelanden på stderr
-- [x] Felhantering: onåbar → exit 3 med läsbart meddelande; oväntat undantag → exit 3, stacktrace bara med `DEBUG=sitecheck`
+- [x] Felhantering: onåbar → exit 3 med läsbart meddelande; oväntat undantag → exit 3, stacktrace bara med `DEBUG=webgauge`
 
 Klart när: `--format json | jq .` fungerar, alla exit codes i avsnitt 7 verifierade av tester.
 
@@ -409,7 +409,7 @@ Klart när: CI grön på PR, README beskriver allt CLI:t gör.
 
 **Täckning (2026-10-23):** 96,8 % rader, 92,0 % grenar för `src/`. Det som återstår är defensiva grenar (ogiltig redirect-`Location`, cheerio-parsefel) och `src/cli/index.ts`, som bara körs som subprocess i integrationstesterna. `@vitest/coverage-v8` är inte tillagt som beroende: `npm i` på Windows med npm 11.6 tar bort rolldowns plattformsbinärer ur lockfilen (npm/cli#4828), så rapporten togs fram i en separat worktree.
 
-**Manuell testrunda (2026-10-23)**, `SiteCheck/0.1.0`, inga trösklar ändrade:
+**Manuell testrunda (2026-10-23)**, `WebGauge/0.1.0`, inga trösklar ändrade:
 
 | Sajt              | Score | Kommentar                                                                                |
 | ----------------- | ----: | ---------------------------------------------------------------------------------------- |
@@ -466,7 +466,7 @@ Branch: `feature/sitemap-reader`, därefter `feature/multi-page`. Kan göras fö
 - [x] CLI: `--pages <n>` (validering, exit 2), stderr-notis när sitemap saknas, terminal visar berörda URL:er
 - [x] Tester: sitemap-parser (index, gzip, zip-bomb, andra hosts), urval, aggregering (alla pass / blandat / alla fail / skippade), integrationstest mot testserver med 3 sidor och en blockerad sida
 
-Klart när: `sitecheck <url> --pages 10` analyserar flera sidor, och `--pages 1` ger samma rapport som idag.
+Klart när: `webgauge <url> --pages 10` analyserar flera sidor, och `--pages 1` ger samma rapport som idag.
 
 ### M9 – Fler kontroller
 
@@ -487,10 +487,10 @@ Klart när: fas A finns i rapporten med `remediation`, och `npm test` är grönt
 
 Branch: `release/1.0.0`. Ett mål, inte en deadline: görs när M6 och helst M7–M9 är klara, annars kan 1.0.0 släppas utan dem.
 
-- [ ] Bekräfta att paketnamnet från M1 fortfarande är ledigt
-- [ ] `package.json`: `files: ["dist"]`, `bin`, verifiera shebang i `dist/cli/index.js`, `repository`, `keywords`, `license`
-- [ ] `npm pack` → installera tarball i tom katalog → `npx sitecheck https://example.com`
-- [ ] `CHANGELOG.md`, exempel-output i README
+- [x] Paketnamn: `sitecheck` är upptaget på npm och `sitechecker` blockeras troligen av npm:s likhetsregel (`site-checker` finns). Beslut 2026-11-13: produkten byter namn till **WebGauge** överallt – npm-paket `webgauge`, kommando `webgauge`, `User-Agent: WebGauge/<version>`, robots.txt-token `WebGauge`, JSON-fältet `meta.webgaugeVersion` (var `meta.sitecheckVersion`), specen heter nu `WebGauge.md`. Inget var publicerat, så `schemaVersion` förblir `1`. GitHub-repot har bytt namn till `hamol355/WebGauge`.
+- [x] `package.json`: `files: ["dist"]`, `bin`, verifiera shebang i `dist/cli/index.js`, `repository`, `keywords`, `license`
+- [x] `npm pack` → installera tarball i tom katalog → `npx webgauge https://example.com`
+- [x] `CHANGELOG.md`, exempel-output i README; version `1.0.0`
 - [ ] Tagga `v1.0.0`, `npm publish`
 
 Klart när: paketet kan köras med `npx` från registret på ren maskin.
@@ -513,7 +513,7 @@ Klart när: paketet kan köras med `npx` från registret på ren maskin.
 | SPA:er där innehållet renderas klientsidigt         | Dokumentera som begränsning (ingen JS-rendering); HTML-kontroller körs på serverns HTML |
 | Enorma/felaktiga svar                               | Body-tak, timeout, `truncated`-flagga, Cheerio körs bara på kapad body                  |
 | Poäng upplevs orättvisa                             | Vikter och trösklar som konstanter; justeras efter manuell testrunda (M5)               |
-| Paketnamnet `sitecheck` upptaget                    | Kontrolleras tidigt i M1, inte först i M6                                               |
+| Paketnamnet `webgauge` upptaget                    | Kontrolleras tidigt i M1, inte först i M6                                               |
 | Framtida SSRF vid REST API                          | Allt nätverk i `net/http.ts` – ett ställe att lägga blockering av privata adresser      |
 
 ## 11. Utanför scope (v1.0.0)

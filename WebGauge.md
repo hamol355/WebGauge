@@ -1,6 +1,6 @@
-# SiteCheck
+# WebGauge
 
-SiteCheck är ett CLI-verktyg som snabbt analyserar en webbplats och hittar vanliga problem inom tillgänglighet (availability), säkerhet, SEO och teknisk webbstandard.
+WebGauge är ett CLI-verktyg som snabbt analyserar en webbplats och hittar vanliga problem inom tillgänglighet (availability), säkerhet, SEO och teknisk webbstandard.
 
 Målet är att ge utvecklare en snabb och lättförståelig rapport över vad som fungerar bra och vad som kan förbättras.
 
@@ -9,11 +9,11 @@ Målet är att ge utvecklare en snabb och lättförståelig rapport över vad so
 ## Exempel
 
 ```bash
-sitecheck https://example.com
+webgauge https://example.com
 ```
 
 ```text
-SiteCheck
+WebGauge
 ────────────────────────────────────────
 
 URL: https://example.com
@@ -56,7 +56,7 @@ När man utvecklar och publicerar en webbplats är det lätt att missa små men 
 - Långsamma svarstider
 - Felaktiga HTTP-statuskoder
 
-Det finns många avancerade verktyg för att analysera webbplatser, men SiteCheck fokuserar på att vara enkelt, snabbt och användbart direkt från terminalen.
+Det finns många avancerade verktyg för att analysera webbplatser, men WebGauge fokuserar på att vara enkelt, snabbt och användbart direkt från terminalen.
 
 ## Mål
 
@@ -131,13 +131,13 @@ SEO
 När projektet är publicerat som npm-paket kan det installeras globalt:
 
 ```bash
-npm install -g sitecheck
+npm install -g webgauge
 ```
 
 Eller köras direkt utan installation:
 
 ```bash
-npx sitecheck https://example.com
+npx webgauge https://example.com
 ```
 
 > Paketnamnet kan komma att ändras beroende på tillgänglighet.
@@ -146,19 +146,19 @@ npx sitecheck https://example.com
 
 ```bash
 # Analysera en webbplats
-sitecheck https://example.com
+webgauge https://example.com
 
 # JSON-output (för scripts och CI/CD)
-sitecheck https://example.com --format json
+webgauge https://example.com --format json
 
 # Misslyckas med non-zero exit code om scoren understiger 80
-sitecheck https://example.com --min-score 80
+webgauge https://example.com --min-score 80
 
 # Visa hjälp
-sitecheck --help
+webgauge --help
 
 # Visa version
-sitecheck --version
+webgauge --version
 ```
 
 ### JSON-output
@@ -208,7 +208,7 @@ Projektet är uppdelat i ett CLI-lager och en separat analysmotor.
 ┌──────────────────────────────┐
 │         CLI Interface        │
 │                              │
-│       sitecheck <url>        │
+│       webgauge <url>        │
 └──────────────┬───────────────┘
                │
                ▼
@@ -254,7 +254,7 @@ En viktig designprincip är att analysmotorn är separerad från CLI:t. Det gör
 En möjlig struktur:
 
 ```text
-sitecheck/
+webgauge/
 ├── src/
 │   ├── cli/
 │   │   └── index.ts
@@ -385,11 +385,11 @@ Statiska WCAG-kontroller (formulärfält, ARIA m.m.) är flyttade till vecka 6.
 
 ### CI/CD
 
-SiteCheck ska kunna användas direkt i ett GitHub Actions-workflow:
+WebGauge ska kunna användas direkt i ett GitHub Actions-workflow:
 
 ```yaml
 - name: Check website
-  run: npx sitecheck https://example.com --min-score 80
+  run: npx webgauge https://example.com --min-score 80
 ```
 
 Om webbplatsens score understiger gränsvärdet returnerar CLI:t en non-zero exit code, vilket låter CI-jobbet misslyckas.
@@ -424,7 +424,7 @@ Response:
 
 ## Begränsningar
 
-SiteCheck är inte tänkt att ersätta professionella säkerhetsverktyg, penetrationstester eller fullständiga SEO- och accessibility-analyser.
+WebGauge är inte tänkt att ersätta professionella säkerhetsverktyg, penetrationstester eller fullständiga SEO- och accessibility-analyser.
 
 Resultaten är automatiserade rekommendationer och grundläggande kontroller, inte en garanti för att en webbplats är säker eller korrekt.
 

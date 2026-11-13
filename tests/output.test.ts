@@ -52,7 +52,7 @@ const report: Report = {
     },
   ],
   meta: {
-    sitecheckVersion: '0.1.0',
+    webgaugeVersion: '0.1.0',
     analyzedAt: '2026-01-01T00:00:00.000Z',
     responseTimeMs: 12,
     truncated: false,
