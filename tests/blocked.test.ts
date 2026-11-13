@@ -94,14 +94,14 @@ describe('robots.txt', () => {
     expect(isDisallowedByRobots(robots('User-agent: *\nDisallow:'), url)).toBe(false);
   });
 
-  it('prefers the SiteCheck group over *', () => {
-    const txt = 'User-agent: *\nDisallow: /\n\nUser-agent: SiteCheck\nDisallow: /private';
+  it('prefers the WebGauge group over *', () => {
+    const txt = 'User-agent: *\nDisallow: /\n\nUser-agent: WebGauge\nDisallow: /private';
     expect(isDisallowedByRobots(robots(txt), url)).toBe(false);
     expect(isDisallowedByRobots(robots(txt), 'https://example.com/private/a')).toBe(true);
   });
 
-  it('blocks when SiteCheck is named and disallowed, even if * allows', () => {
-    const txt = 'User-agent: sitecheck\nDisallow: /\n\nUser-agent: *\nDisallow:';
+  it('blocks when WebGauge is named and disallowed, even if * allows', () => {
+    const txt = 'User-agent: webgauge\nDisallow: /\n\nUser-agent: *\nDisallow:';
     expect(isDisallowedByRobots(robots(txt), url)).toBe(true);
   });
 

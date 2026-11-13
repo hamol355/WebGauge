@@ -74,7 +74,7 @@ describe('fetchPage', () => {
       expect(page.html).toBe('<title>Åäö</title>');
     });
 
-    it('sends the SiteCheck User-Agent', async () => {
+    it('sends the WebGauge User-Agent', async () => {
       const page = await fetchPage(`${server.url}/ua`);
       expect(page.html).toBe(USER_AGENT);
     });

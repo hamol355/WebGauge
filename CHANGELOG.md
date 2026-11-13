@@ -11,4 +11,5 @@
 
 ### Changed
 
+- **Renamed to WebGauge.** The npm package and command are now `webgauge`, the User-Agent is `WebGauge/<version>`, robots.txt rules are matched against the `WebGauge` token, and the JSON field `meta.sitecheckVersion` is now `meta.webgaugeVersion`.
 - **Scores change.** The new checks raise the maximum points of their categories. Category weights are unchanged and the category score is normalised against them, so the same site can get a somewhat different score than before.

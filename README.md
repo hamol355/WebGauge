@@ -1,6 +1,6 @@
-# SiteCheck
+# WebGauge
 
-SiteCheck is a command-line tool that checks a website for availability, security, SEO and accessibility and reports a score from 0 to 100, with advice on how to fix each problem.
+WebGauge is a command-line tool that checks a website for availability, security, SEO and accessibility and reports a score from 0 to 100, with advice on how to fix each problem.
 
 ## Installation
 
@@ -17,16 +17,16 @@ During development, run from source with `npm run dev -- https://example.com`.
 ## Usage
 
 ```text
-sitecheck <url> [--format text|json] [--min-score <0-100>] [--help] [--version]
+webgauge <url> [--format text|json] [--min-score <0-100>] [--help] [--version]
 ```
 
 - If the URL has no scheme, `https://` is assumed.
 - `--format text` (default) prints a human-readable report; `--format json` prints the JSON report described below.
 - `--min-score <n>` makes the command exit with code 1 when the score is below `n` (useful in CI). The report is still printed.
 - Colors are used only when stdout is a TTY and `NO_COLOR` is not set.
-- Set `DEBUG=sitecheck` to print stack traces for internal errors.
+- Set `DEBUG=webgauge` to print stack traces for internal errors.
 
-The report goes to **stdout**; errors and diagnostics go to **stderr**, so `--format json` can always be piped, e.g. `sitecheck example.com --format json | jq .score`.
+The report goes to **stdout**; errors and diagnostics go to **stderr**, so `--format json` can always be piped, e.g. `webgauge example.com --format json | jq .score`.
 
 ### Exit codes
 
@@ -103,7 +103,7 @@ The JSON output is a public interface (`schemaVersion` is `1`):
     }
   ],
   "meta": {
-    "sitecheckVersion": "0.1.0",
+    "webgaugeVersion": "0.1.0",
     "analyzedAt": "2026-01-01T12:00:00.000Z",
     "responseTimeMs": 123,
     "truncated": false
@@ -116,13 +116,13 @@ The JSON output is a public interface (`schemaVersion` is `1`):
 ## Limitations
 
 - The page is fetched once and analysed as served. JavaScript is not executed, so content rendered client-side (SPAs) is not seen by the SEO and accessibility checks.
-- Sites that do not allow automated visitors are not scored. If the start page answers 401, 403 or 429, serves a bot-protection challenge (e.g. Cloudflare "Just a moment"), or `robots.txt` disallows the page for `SiteCheck` or `*`, SiteCheck prints `Access not allowed: <reason>` to stderr, writes nothing to stdout and exits with code 3. SiteCheck identifies itself as `SiteCheck/<version>` and never tries to bypass the protection. Note that many sites have `User-agent: *` / `Disallow: /` and only admit named search engines; ask the site owner to allow the `SiteCheck` user agent. A broken `robots.txt` (4xx, 5xx, unreachable) is treated as allowing everything; on 5xx SiteCheck prints a `Notice:` line to stderr. A site that answers 200 with a reduced page for bots cannot be detected reliably and is analysed as served, so the score reflects what SiteCheck received rather than what a browser would see. 404 and 5xx responses are not blocks and get a normal report with a failed `http-status`.
+- Sites that do not allow automated visitors are not scored. If the start page answers 401, 403 or 429, serves a bot-protection challenge (e.g. Cloudflare "Just a moment"), or `robots.txt` disallows the page for `WebGauge` or `*`, WebGauge prints `Access not allowed: <reason>` to stderr, writes nothing to stdout and exits with code 3. WebGauge identifies itself as `WebGauge/<version>` and never tries to bypass the protection. Note that many sites have `User-agent: *` / `Disallow: /` and only admit named search engines; ask the site owner to allow the `WebGauge` user agent. A broken `robots.txt` (4xx, 5xx, unreachable) is treated as allowing everything; on 5xx WebGauge prints a `Notice:` line to stderr. A site that answers 200 with a reduced page for bots cannot be detected reliably and is analysed as served, so the score reflects what WebGauge received rather than what a browser would see. 404 and 5xx responses are not blocks and get a normal report with a failed `http-status`.
 - Requests time out after 10 s (5 s for `robots.txt`, `sitemap.xml` and the HTTP→HTTPS probe), follow at most 5 redirects, and read at most 2 MB of the page (1 MB for `robots.txt` and the sitemap). Larger pages are analysed truncated; the report then has `meta.truncated: true` and the text output says so.
 - The sitemap check verifies that a sitemap exists and looks like XML; it does not validate its contents.
 - Accessibility checks cover only what static HTML shows. Colour contrast, focus indicators and keyboard traps need a real browser and are not checked, so a good accessibility score does not mean the site is WCAG compliant.
 - `tls-certificate` makes its own TLS handshake (no HTTP request) and validates the chain against Node's built-in CA store. Node does not fetch missing intermediate certificates the way browsers do, so a server that omits them fails here even if browsers accept it.
-- `soft-404` requests one random path (`/sitecheck-404-<random>`) on the site to see whether a missing page answers 404. It is skipped if `robots.txt` disallows the path.
-- `www-consistency` makes one request to the www/non-www counterpart of the host. It only runs for `www.` hosts and two-label hosts like `example.com`; hosts such as `example.co.uk` are skipped because SiteCheck has no public suffix list. `security-txt` requests `/.well-known/security.txt` (skipped if `robots.txt` disallows it). `duplicate-titles` and `duplicate-descriptions` need `--pages 2` or more and are skipped otherwise.
+- `soft-404` requests one random path (`/webgauge-404-<random>`) on the site to see whether a missing page answers 404. It is skipped if `robots.txt` disallows the path.
+- `www-consistency` makes one request to the www/non-www counterpart of the host. It only runs for `www.` hosts and two-label hosts like `example.com`; hosts such as `example.co.uk` are skipped because WebGauge has no public suffix list. `security-txt` requests `/.well-known/security.txt` (skipped if `robots.txt` disallows it). `duplicate-titles` and `duplicate-descriptions` need `--pages 2` or more and are skipped otherwise.
 - Performance and Core Web Vitals are out of scope for v1.
 
 ## Development

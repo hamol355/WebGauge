@@ -33,7 +33,7 @@ async function run(
     env: options.env ?? {},
     stdoutIsTTY: options.isTTY ?? false,
   };
-  const code = await main(['node', 'sitecheck', ...args], io, options.analyze);
+  const code = await main(['node', 'webgauge', ...args], io, options.analyze);
   return { code, stdout, stderr };
 }
 
@@ -54,7 +54,7 @@ describe('cli output', () => {
   it('prints a text report to stdout and exits 0', async () => {
     const r = await run([server.url]);
     expect(r.code).toBe(EXIT_OK);
-    expect(r.stdout).toContain('SiteCheck');
+    expect(r.stdout).toContain('WebGauge');
     expect(r.stdout).toMatch(/Score: \d+\/100/);
     expect(r.stderr).toBe('');
   });
@@ -66,7 +66,7 @@ describe('cli output', () => {
     const report = JSON.parse(r.stdout) as Report;
     expect(report.schemaVersion).toBe(1);
     expect(report.url).toBe(`${server.url}/`);
-    expect(report.meta.sitecheckVersion).toBe(VERSION);
+    expect(report.meta.webgaugeVersion).toBe(VERSION);
     expect(report.checks.length).toBeGreaterThan(10);
     expect(report.checks[0]).toMatchObject({ id: 'http-status', status: 'pass' });
   });
@@ -261,9 +261,9 @@ describe('unreachable and internal errors (exit 3)', () => {
     expect(r.stderr).not.toContain('at ');
   });
 
-  it('prints the stack with DEBUG=sitecheck', async () => {
+  it('prints the stack with DEBUG=webgauge', async () => {
     const analyze = () => Promise.reject(new Error('kaboom'));
-    const r = await run([server.url], { analyze, env: { DEBUG: 'sitecheck' } });
+    const r = await run([server.url], { analyze, env: { DEBUG: 'webgauge' } });
     expect(r.stderr).toContain('at ');
   });
 

@@ -46,7 +46,7 @@ export function renderTerminal(report: Report, options: { color?: boolean } = {}
   const paint = (status: Status, text: string) =>
     options.color ? `${COLORS[status]}${text}${RESET}` : text;
 
-  const lines = ['SiteCheck', RULE, '', `URL: ${report.url}`];
+  const lines = ['WebGauge', RULE, '', `URL: ${report.url}`];
   if (report.finalUrl !== report.url) lines.push(`Final URL: ${report.finalUrl}`);
   if (report.meta.truncated) {
     lines.push('Note: the page exceeded the size limit; only its beginning was analysed.');

@@ -153,7 +153,7 @@ function stripHash(url: URL): string {
 }
 
 /**
- * Keeps only pages SiteCheck may analyse: same origin as the start page (SSRF guard), http(s),
+ * Keeps only pages WebGauge may analyse: same origin as the start page (SSRF guard), http(s),
  * HTML-looking paths, allowed by robots.txt. Deduplicated; order preserved.
  */
 export function filterPageUrls(urls: string[], startUrl: string, robots: TextResponse): string[] {

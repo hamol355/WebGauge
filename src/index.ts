@@ -90,8 +90,7 @@ export async function analyze(url: string, options: AnalyzeOptions = {}): Promis
   const reason = detectBlock(page, robots);
   if (reason) throw new BlockedError(reason, page.status, page.finalUrl);
   // The soft-404 probe path respects robots.txt like any other request, so it needs robots.txt first.
-  const soft404Url = new URL(`/sitecheck-404-${randomBytes(8).toString('hex')}`, page.finalUrl)
-    .href;
+  const soft404Url = new URL(`/webgauge-404-${randomBytes(8).toString('hex')}`, page.finalUrl).href;
   // Fetched once: it feeds both the sitemap-xml check and the page selection.
   const securityTxtUrl = new URL('/.well-known/security.txt', page.finalUrl).href;
   const wwwUrl = wwwCounterpart(page.finalUrl);
@@ -135,7 +134,7 @@ export async function analyze(url: string, options: AnalyzeOptions = {}): Promis
     ...calculateScore(checks),
     checks,
     meta: {
-      sitecheckVersion: VERSION,
+      webgaugeVersion: VERSION,
       analyzedAt: now().toISOString(),
       responseTimeMs: page.responseTimeMs,
       truncated: page.truncated,

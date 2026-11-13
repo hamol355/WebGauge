@@ -1,11 +1,31 @@
 {
-  "name": "sitecheck-cli",
+  "name": "webgauge",
   "version": "0.1.0",
-  "description": "CLI that checks a website for availability, security, SEO and HTML quality and reports a score 0-100.",
+  "description": "CLI that checks a website for availability, security, SEO and accessibility and reports a score 0-100.",
   "license": "MIT",
+  "author": "Hampus Olsson",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hamol355/SiteCheck.git"
+  },
+  "homepage": "https://github.com/hamol355/SiteCheck#readme",
+  "bugs": {
+    "url": "https://github.com/hamol355/SiteCheck/issues"
+  },
+  "keywords": [
+    "cli",
+    "website",
+    "audit",
+    "security",
+    "seo",
+    "accessibility",
+    "wcag",
+    "headers",
+    "score"
+  ],
   "type": "module",
   "bin": {
-    "sitecheck": "dist/cli/index.js"
+    "webgauge": "dist/cli/index.js"
   },
   "files": [
     "dist"
