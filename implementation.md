@@ -487,10 +487,10 @@ Klart när: fas A finns i rapporten med `remediation`, och `npm test` är grönt
 
 Branch: `release/1.0.0`. Ett mål, inte en deadline: görs när M6 och helst M7–M9 är klara, annars kan 1.0.0 släppas utan dem.
 
-- [x] Paketnamn: `sitecheck` är upptaget på npm och `sitechecker` blockeras troligen av npm:s likhetsregel (`site-checker` finns). Beslut 2026-11-13: produkten byter namn till **WebGauge** överallt – npm-paket `webgauge`, kommando `webgauge`, `User-Agent: WebGauge/<version>`, robots.txt-token `WebGauge`, JSON-fältet `meta.webgaugeVersion` (var `meta.sitecheckVersion`), specen heter nu `WebGauge.md`. Inget var publicerat, så `schemaVersion` förblir `1`. GitHub-repot heter fortfarande `SiteCheck`.
+- [x] Paketnamn: `sitecheck` är upptaget på npm och `sitechecker` blockeras troligen av npm:s likhetsregel (`site-checker` finns). Beslut 2026-11-13: produkten byter namn till **WebGauge** överallt – npm-paket `webgauge`, kommando `webgauge`, `User-Agent: WebGauge/<version>`, robots.txt-token `WebGauge`, JSON-fältet `meta.webgaugeVersion` (var `meta.sitecheckVersion`), specen heter nu `WebGauge.md`. Inget var publicerat, så `schemaVersion` förblir `1`. GitHub-repot har bytt namn till `hamol355/WebGauge`.
 - [x] `package.json`: `files: ["dist"]`, `bin`, verifiera shebang i `dist/cli/index.js`, `repository`, `keywords`, `license`
-- [ ] `npm pack` → installera tarball i tom katalog → `npx webgauge https://example.com`
-- [ ] `CHANGELOG.md`, exempel-output i README
+- [x] `npm pack` → installera tarball i tom katalog → `npx webgauge https://example.com`
+- [x] `CHANGELOG.md`, exempel-output i README; version `1.0.0`
 - [ ] Tagga `v1.0.0`, `npm publish`
 
 Klart när: paketet kan köras med `npx` från registret på ren maskin.

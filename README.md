@@ -7,6 +7,13 @@ WebGauge is a command-line tool that checks a website for availability, security
 Requires Node.js 22 or later.
 
 ```bash
+npx webgauge https://example.com     # run without installing
+npm install -g webgauge              # or install the webgauge command globally
+```
+
+From source:
+
+```bash
 npm install
 npm run build
 node dist/cli/index.js https://example.com
@@ -17,16 +24,64 @@ During development, run from source with `npm run dev -- https://example.com`.
 ## Usage
 
 ```text
-webgauge <url> [--format text|json] [--min-score <0-100>] [--help] [--version]
+webgauge <url> [--format text|json] [--min-score <0-100>] [--pages <1-50>] [--help] [--version]
 ```
 
 - If the URL has no scheme, `https://` is assumed.
 - `--format text` (default) prints a human-readable report; `--format json` prints the JSON report described below.
 - `--min-score <n>` makes the command exit with code 1 when the score is below `n` (useful in CI). The report is still printed.
+- `--pages <n>` (default 1) also analyses up to `n - 1` more pages from the site's sitemap (max 50). Only pages on the same origin as the start page are fetched, `robots.txt` is respected, and blocked pages are skipped with a reason instead of stopping the run.
 - Colors are used only when stdout is a TTY and `NO_COLOR` is not set.
 - Set `DEBUG=webgauge` to print stack traces for internal errors.
 
 The report goes to **stdout**; errors and diagnostics go to **stderr**, so `--format json` can always be piped, e.g. `webgauge example.com --format json | jq .score`.
+
+### Example
+
+```text
+$ webgauge example.com
+WebGauge
+────────────────────────────────────────
+
+URL: https://example.com/
+
+Availability (11/15)
+  ✓ Responded with HTTP 200
+  ✓ Response time 91 ms
+  ✗ http://example.com/ is served over HTTP without redirecting to HTTPS
+    → Redirect all http:// requests to https:// with a 301 response (e.g. "return 301 https://$host$request_uri;" in nginx).
+  ✓ Missing pages respond with HTTP 404
+  ✓ No redirects to the final URL
+  ⚠ www.example.com also serves the site without redirecting to example.com (duplicate content)
+    → Pick one of www and non-www and 301-redirect the other to it.
+
+Security (17/35)
+  ✓ Page is served over HTTPS
+  ✗ Missing Strict-Transport-Security header
+    → Add header: Strict-Transport-Security: max-age=15552000; includeSubDomains
+  ✗ Missing Content-Security-Policy header
+    → Add header: Content-Security-Policy: default-src 'self' (and avoid 'unsafe-inline' and 'unsafe-eval')
+  ✓ Certificate is valid for 42 more days, TLSv1.3
+  …
+
+SEO (11/20)
+  ✓ Title is 14 characters
+  ✗ Missing meta description
+    → Add <meta name="description" content="..."> to the <head>.
+  – Skipped duplicate-titles: needs --pages 2 or more
+  …
+
+Accessibility (26/30)
+  ✓ Document language is "en" (WCAG 3.1.1)
+  ✗ Page has no main landmark (WCAG 1.3.1, 2.4.1)
+    → Wrap the primary content in a <main> element so assistive technology can jump to it.
+  …
+
+────────────────────────────────────────
+Score: 65/100 (Needs improvement)
+```
+
+(Shortened; the real report lists every check.) `✓` pass, `⚠` warn, `✗` fail, `–` skipped; `→` is the remediation.
 
 ### Exit codes
 
@@ -103,15 +158,18 @@ The JSON output is a public interface (`schemaVersion` is `1`):
     }
   ],
   "meta": {
-    "webgaugeVersion": "0.1.0",
+    "webgaugeVersion": "1.0.0",
     "analyzedAt": "2026-01-01T12:00:00.000Z",
     "responseTimeMs": 123,
-    "truncated": false
+    "truncated": false,
+    "pagesAnalyzed": 1
   }
 }
 ```
 
 `status` is one of `pass`, `warn`, `fail`, `error`, `skip`. `remediation` is present only when there is something to fix.
+
+With `--pages` greater than 1, `checks` holds one aggregated result per check id and an extra `pages` array lists each page (`url`, `status`, `skipped` with a reason if it was not analysed, and its `checks` as id/status/message). `meta.pagesAnalyzed` counts the start page plus the extra pages that were not skipped.
 
 ## Limitations
 
